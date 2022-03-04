@@ -18,7 +18,6 @@ if __name__ == '__main__':
 	# define a plan variable
 	plan = Plan()
 	plan_point1 = Twist()
-	# just a quick solution to send two target points
 	# define a point close to the initial position
 	plan_point1.linear.x = -0.42
 	plan_point1.linear.y = -0.23
