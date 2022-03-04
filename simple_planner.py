@@ -40,7 +40,7 @@ if __name__ == '__main__':
 	# add this point to the plan
 	plan.points.append(plan_point2)
 
-  plan_point3 = Twist()
+  	plan_point3 = Twist()
 	# define a another point away from the initial position
 	plan_point3.linear.x = -0.32
 	plan_point3.linear.y = -0.62
@@ -52,7 +52,7 @@ if __name__ == '__main__':
 	plan.points.append(plan_point3)
   
 	plan_point4 = Twist()
-  #test this again before class
+  	#test this again before class
 	# define a another point away from the initial position
 	plan_point4.linear.x = -0.672
 	plan_point4.linear.y = -0.233
