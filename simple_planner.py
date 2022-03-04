@@ -52,8 +52,7 @@ if __name__ == '__main__':
 	plan.points.append(plan_point3)
   
 	plan_point4 = Twist()
-  	#test this again before class
-	# define a another point away from the initial position
+	# set object down
 	plan_point4.linear.x = -0.672
 	plan_point4.linear.y = -0.233
 	plan_point4.linear.z = 0.124
