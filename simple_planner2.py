@@ -36,7 +36,7 @@ if __name__ == '__main__':
 	plan_point0 = Twist()
 	# above ball
 	plan_point0.linear.x = ball.xc
-	plan_point0.linear.y =ball.yc + 1
+	plan_point0.linear.y =ball.yc + 0.1
 	plan_point0.linear.z = ball.zc
 	plan_point0.angular.x = 1.57
 	plan_point0.angular.y = 0.0
