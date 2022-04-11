@@ -2,16 +2,22 @@
 
 import rospy
 import math
+import tf2_ros
+import tf2_geometry_msgs
+
 
 # import the plan message
 from ur5e_control.msg import Plan
 from geometry_msgs.msg import Twist
 from robot_vision_lectures.msg import XYZarray
 from robot_vision_lectures.msg import SphereParams
+from tf.transformations import *
+from geometry_msgs.msg import Quaternion
 
 ball = SphereParams()
 
 def get_ball(param):
+	#print("ball found")
 	global ball
 	ball.xc = param.xc
 	ball.yc = param.yc
@@ -29,8 +35,12 @@ if __name__ == '__main__':
 	loop_rate = rospy.Rate(10)
 	#sub to filtered parameters
 	
-	ball_sub = rospy.Subscriber("/sphere_params", SphereParams, get_ball)
+	ball_sub = rospy.Subscriber('/sphere_params', SphereParams, get_ball)
 	
+	buffer = tf2_ros.Buffer()
+	listener = tf2_ros.TransformListener(buffer)
+	
+	qrot = Quaternion()
 	# define a plan variable
 	plan = Plan()
 	plan_point0 = Twist()
@@ -44,9 +54,9 @@ if __name__ == '__main__':
 	
 	plan_point1 = Twist()
 	# define a point close to the initial position
-	plan_point1.linear.x = -0.42
-	plan_point1.linear.y = -0.23
-	plan_point1.linear.z = 0.4879
+	plan_point1.linear.x = ball.xc
+	plan_point1.linear.y = ball.yc
+	plan_point1.linear.z = ball.zc
 	plan_point1.angular.x = 1.57
 	plan_point1.angular.y = 0.0
 	plan_point1.angular.z = 0.0
@@ -63,8 +73,8 @@ if __name__ == '__main__':
 	plan_point2.angular.z = 0.0
 	# add this point to the plan
 	plan.points.append(plan_point2)
-
-  	plan_point3 = Twist()
+	
+	plan_point3 = Twist()
 	# define a another point away from the initial position
 	plan_point3.linear.x = -0.32
 	plan_point3.linear.y = -0.62
@@ -74,7 +84,7 @@ if __name__ == '__main__':
 	plan_point3.angular.z = 0.75
 	# add this point to the plan
 	plan.points.append(plan_point3)
-  
+	
 	plan_point4 = Twist()
 	# set object down
 	plan_point4.linear.x = -0.672
@@ -89,7 +99,25 @@ if __name__ == '__main__':
 	
 	
 	while not rospy.is_shutdown():
+		try:
+			trans = buffer.lookup_transform("base", "fk_tooltip", rospy.Time())
+		except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+			print('frames unavailable')
+			loop_rate.sleep()
+			continue
+		x = trans.transform.translation.x
+		y = trans.transform.translation.y
+		z = trans.transform.translation.z
+		qrot = trans.transform.rotation
+		
+		roll, pitch, yaw, = euler_from_quaternion([qrot.x, qrot.y, qrot.z, qrot.w])
+		
+		tool = tf2_geometry_msgs.PointStamped()
+		tool.header.frame_id = 'fk_tooltip'
+		tool.header.stamp = rospy.get_rostime()
+		base = buffer.transform(tool, 'base', rospy.Duration(1.0))
 		# publish the plan
 		plan_pub.publish(plan)
 		# wait for 0.1 seconds until the next loop and repeat
 		loop_rate.sleep()
+
