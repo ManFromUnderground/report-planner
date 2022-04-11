@@ -121,3 +121,4 @@ if __name__ == '__main__':
 		# wait for 0.1 seconds until the next loop and repeat
 		loop_rate.sleep()
 
+#use plan points to compare the location of the machine with the intended target
