@@ -15,25 +15,34 @@ from tf.transformations import *
 from geometry_msgs.msg import Quaternion
 
 ball = SphereParams()
+got_ball = False
 #based_ball = tf2_geometry_msgs.PointStamped()
+#go = False
+
+"""def execute(bool):
+	global go
+	go = bool"""
+
+def get_twist(x, y, z, roll, pitch, yaw):
+	twist1 = Twist()
+	twist1.linear.x = x
+	twist1.linear.y = y
+	twist1.linear.z = z
+	twist1.angular.x = roll
+	twist1.angular.y = pitch
+	twist1.angular.z = yaw
+	return twist1
 
 def get_ball(param):
 	global ball
+	global got_ball
 	#global based_ball
 	point1 = tf2_geometry_msgs.PointStamped()
 	ball.xc = param.xc
 	ball.yc = param.yc
 	ball.zc = param.zc
 	ball.radius = param.radius
-	"""if param.xc != 0.0 and param.yc != 0.0 and param.zc != 0.0:
-		point1.point.x = param.xc
-		point1.point.y = param.yc
-		point1.point.z = param.zc
-		point1.header.stamp = 'camera_color_optical'
-	buffer2 = tf2_ros.Buffer()
-	listener2 = tf2_ros.TransformListener(buffer2)
-	if param.xc != 0.0 and param.yc != 0.0 and param.zc != 0.0:
-		based_ball = buffer2.transform(point1,'base',rospy.Duration(1.0))"""
+	got_ball = True
 	
 
 if __name__ == '__main__':
@@ -49,9 +58,11 @@ if __name__ == '__main__':
 	
 	ball_sub = rospy.Subscriber('/sphere_params', SphereParams, get_ball)
 	
+	#bool_sub = rospy.Subscriber('/std_msgs/Bool', boolean, execute)
+		
 	buffer = tf2_ros.Buffer()
 	listener = tf2_ros.TransformListener(buffer)
-	print("listener:", listener)
+	
 	qrot = Quaternion()
 	
 	
@@ -60,113 +71,89 @@ if __name__ == '__main__':
 	base = tf2_geometry_msgs.PointStamped()
 	#cam.x, cam.y, cam.z, cam.rotation = None, None, None, None
 	
-	while ((cam.point.x is None or ball.xc == 0.0) or (cam.point.y is None or ball.yc == 0.0) or (cam.point.z is None or ball.zc == 0.0)) or not_except == True:
-		try:
-			trans = buffer.lookup_transform("base", "camera_color_optical", rospy.Time())
-			print("trans is:", trans)
-			not_except = True
-		except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-			print('frames unavailable')
-			print("cam x:", cam.point.x)
+	while not rospy.is_shutdown():
+		if got_ball:
+			try:
+				trans = buffer.lookup_transform("base", "camera_color_optical_frame", rospy.Time())
+				print("trans is:", trans)
+				not_except = True
+			except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+				print('frames unavailable')
+				print("cam x:", cam.point.x)
+				print("cam y:", cam.point.y)
+				print("cam z:", cam.point.z)
+				print("ball x:", ball.xc)
+				print("ball y:", ball.yc)
+				print("ball z:", ball.zc)
+				
+				continue
+			x = trans.transform.translation.x
+			y = trans.transform.translation.y
+			z = trans.transform.translation.z
+			
+			qrot = trans.transform.rotation
+			roll, pitch, yaw, = euler_from_quaternion([qrot.x, qrot.y, qrot.z, qrot.w])
+			
+			
+			cam.header.frame_id = "camera_color_optical_frame"
+			cam.header.stamp = rospy.get_rostime()
+			#while ball.xc != cam.point.x:
+			cam.point.x = ball.xc
+			cam.point.y = ball.yc
+			cam.point.z = ball.zc
+			
+			
+			
+			base = buffer.transform(cam, 'base', rospy.Duration(1.0))
+			print('Test point in the cam frame:  x= ', format(cam.point.x, '.3f'), '(m), y= ', format(cam.point.y, '.3f'), '(m), z= ', format(cam.point.z, '.3f'),'(m)')
+			print('Transformed point in the base frame:  x= ', format(base.point.x, '.3f'), '(m), y= ', format(base.point.y, '.3f'), '(m), z= ', format(base.point.z, '.3f'),'(m)')
+			print('-------------------------------------------------')
+			
+			"""print("cam x:", cam.point.x)
 			print("cam y:", cam.point.y)
 			print("cam z:", cam.point.z)
-			print("ball x:", ball.xc)
-			print("ball y:", ball.yc)
-			print("ball z:", ball.zc)
+			print("base x:", base.point.x)
+			print("base y:", base.point.y)
+			print("base z:", base.point.z)"""
 			
-			continue
-		"""x = trans.transform.translation.x
-		y = trans.transform.translation.y
-		z = trans.transform.translation.z"""
-		
-		"""qrot = trans.transform.rotation
-		roll, pitch, yaw, = euler_from_quaternion([qrot.x, qrot.y, qrot.z, qrot.w])"""
-		cam.header.frame_id = "camera_color_optical"
-		cam.header.stamp = rospy.get_rostime()
-		#while ball.xc != cam.point.x:
-		cam.point.x = ball.xc
-		cam.point.y = ball.yc
-		cam.point.z = ball.zc
+			#qrot = cam.transform.rotation
+			#roll, pitch, yaw, = euler_from_quaternion([qrot.x, qrot.y, qrot.z, qrot.w])
 			
-		print("attempted to assign")
-		
-		base = buffer.transform(cam, 'base', rospy.Duration(1.0))
-		
-		qrot = cam.transform.rotation
-		roll, pitch, yaw, = euler_from_quaternion([qrot.x, qrot.y, qrot.z, qrot.w])
-		loop_rate.sleep()
-		
-	# define a plan variable
-	plan = Plan()
-	
-	plan_point0 = Twist()
-	
-	
-	# above ball
-	plan_point0.linear.x = base.point.x
-	plan_point0.linear.y = base.point.y
-	plan_point0.linear.z = base.point.z + 0.5
-	plan_point0.angular.x = 1.57
-	plan_point0.angular.y = 0.0
-	plan_point0.angular.z = 0.0
-	# add this point to the plan
-	plan.points.append(plan_point0)
-	
-	print("plan 0:", plan_point0)
-	
-	plan_point1 = Twist()
-	plan_point1.linear.x = base.point.x
-	plan_point1.linear.y = base.point.y
-	plan_point1.linear.z = base.point.z
-	plan_point1.angular.x = 1.57
-	plan_point1.angular.y = 0.0
-	plan_point1.angular.z = 0.0
-	# add this point to the plan
-	plan.points.append(plan_point1)
-	
-	print(plan_point1)
-	
-	plan_point2 = Twist()
-	# define a point away from the initial position
-	plan_point2.linear.x = -0.672
-	plan_point2.linear.y = -0.233
-	plan_point2.linear.z = 0.124
-	plan_point2.angular.x = 1.57
-	plan_point2.angular.y = -0.45
-	plan_point2.angular.z = 0.0
-	# add this point to the plan
-	plan.points.append(plan_point2)
-	
-	plan_point3 = Twist()
-	# define a another point away from the initial position
-	plan_point3.linear.x = -0.32
-	plan_point3.linear.y = -0.62
-	plan_point3.linear.z = 0.29
-	plan_point3.angular.x = 1.57
-	plan_point3.angular.y = -0.2
-	plan_point3.angular.z = 0.75
-	# add this point to the plan
-	plan.points.append(plan_point3)
-	
-	plan_point4 = Twist()
-	# set object down
-	plan_point4.linear.x = -0.672
-	plan_point4.linear.y = -0.233
-	plan_point4.linear.z = 0.124
-	plan_point4.angular.x = 1.57
-	plan_point4.angular.y = -0.2
-	plan_point4.angular.z = 0.75
-	# add this point to the plan
-	plan.points.append(plan_point4)
-
-	
-	print("reached last while")
-	while not rospy.is_shutdown():
+			# define a plan variable
+			plan = Plan()
 		
 		
-		# publish the plan
-		plan_pub.publish(plan)
-		# wait for 0.1 seconds until the next loop and repeat
+			# above ball
+			twist1 = get_twist(base.point.x, base.point.y, base.point.z + ball.radius + 0.1, 1.57, 0.0, 0.0)
+			# add this point to the plan
+			plan.points.append(twist1)
+			
+			twist2 = get_twist(base.point.x, base.point.y, base.point.z + ball.radius, 1.57, 0.0, 0.0)
+			# add this point to the plan
+			plan.points.append(twist2)
+			
+			# go back up
+			plan.points.append(twist1)
+			
+			twist3 = get_twist(-0.672, -0.233, 0.124, 1.57, -0.45, 0.0)
+			# add this point to the plan
+			plan.points.append(twist3)
+			
+			twist4 = get_twist(-0.32, -0.62, 0.29, 1.57, -0.2, 0.75)
+			# add this point to the plan
+			plan.points.append(twist4)
+			
+			twist5 = get_twist(-0.672, -0.233, 0.124, 1.57, -0.2, 0.75)
+			# add this point to the plan
+			plan.points.append(twist5)
+			
+			
+			
+			
+			
+			# publish the plan
+			plan_pub.publish(plan)
+			# wait for 0.1 seconds until the next loop and repeat
 		loop_rate.sleep()
 
 #use plan points to compare the location of the machine with the intended target
