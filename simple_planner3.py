@@ -135,21 +135,23 @@ if __name__ == '__main__':
 			# go back up
 			plan.points.append(twist1)
 			
-			twist3 = get_twist(-0.672, -0.233, 0.124, 1.57, -0.45, 0.0)
+			twist3 = get_twist(base.point.x + .2, base.point.y - .05, base.point.z + ball.radius + 0.1, 1.57, -0.45, 0.0)
 			# add this point to the plan
 			plan.points.append(twist3)
 			
-			twist4 = get_twist(-0.32, -0.62, 0.29, 1.57, -0.2, 0.75)
+			twist4 = get_twist(base.point.x + .2, base.point.y - .05, base.point.z + ball.radius, 1.57, -0.2, 0.75)
 			# add this point to the plan
 			plan.points.append(twist4)
 			
-			twist5 = get_twist(-0.672, -0.233, 0.124, 1.57, -0.2, 0.75)
+			plan.points.append(twist3)
+			
+			"""twist5 = get_twist(-0.672, -0.233, 0.124, 1.57, -0.2, 0.75)
 			# add this point to the plan
-			plan.points.append(twist5)
+			plan.points.append(twist5)"""
 			
 			
 			
-			
+			#math.pi, 0, math.pi/2
 			
 			# publish the plan
 			plan_pub.publish(plan)
