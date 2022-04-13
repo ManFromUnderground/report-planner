@@ -37,13 +37,13 @@ if __name__ == '__main__':
 	pos_cmd_point.positions[1] = -1.25
 	# just change the value of the command for the elbow joint
 	pos_cmd_point.positions[0] = 1.4
-	
+	#shoulder pan
 	pos_cmd_point.positions[2] = 1.0
-	
+	#wrist 1
 	pos_cmd_point.positions[3] = -1.77
-	
+	#wrist 2
 	pos_cmd_point.positions[4] = -1.4
-	
+	#wrist 3
 	pos_cmd_point.positions[5] = 0.0
 	
 	# add the trajectory point to the command
