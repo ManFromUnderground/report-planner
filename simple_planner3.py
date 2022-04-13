@@ -13,15 +13,17 @@ from robot_vision_lectures.msg import XYZarray
 from robot_vision_lectures.msg import SphereParams
 from tf.transformations import *
 from geometry_msgs.msg import Quaternion
+from std_msgs.msg import Bool
 
 ball = SphereParams()
 got_ball = False
-#based_ball = tf2_geometry_msgs.PointStamped()
-#go = False
+go = Bool()
+go = False
 
-"""def execute(bool):
+
+def execute(bool):
 	global go
-	go = bool"""
+	go = bool
 
 def get_twist(x, y, z, roll, pitch, yaw):
 	twist1 = Twist()
@@ -33,10 +35,10 @@ def get_twist(x, y, z, roll, pitch, yaw):
 	twist1.angular.z = yaw
 	return twist1
 
+
 def get_ball(param):
 	global ball
 	global got_ball
-	#global based_ball
 	point1 = tf2_geometry_msgs.PointStamped()
 	ball.xc = param.xc
 	ball.yc = param.yc
@@ -58,8 +60,8 @@ if __name__ == '__main__':
 	
 	ball_sub = rospy.Subscriber('/sphere_params', SphereParams, get_ball)
 	
-	#bool_sub = rospy.Subscriber('/std_msgs/Bool', boolean, execute)
-		
+	bool_sub = rospy.Subscriber('/std_msgs/Bool', Bool, execute)
+	
 	buffer = tf2_ros.Buffer()
 	listener = tf2_ros.TransformListener(buffer)
 	
@@ -69,22 +71,14 @@ if __name__ == '__main__':
 	cam = tf2_geometry_msgs.PointStamped()
 	
 	base = tf2_geometry_msgs.PointStamped()
-	#cam.x, cam.y, cam.z, cam.rotation = None, None, None, None
+	
 	
 	while not rospy.is_shutdown():
 		if got_ball:
 			try:
 				trans = buffer.lookup_transform("base", "camera_color_optical_frame", rospy.Time())
-				print("trans is:", trans)
-				not_except = True
 			except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-				print('frames unavailable')
-				print("cam x:", cam.point.x)
-				print("cam y:", cam.point.y)
-				print("cam z:", cam.point.z)
-				print("ball x:", ball.xc)
-				print("ball y:", ball.yc)
-				print("ball z:", ball.zc)
+				
 				
 				continue
 			x = trans.transform.translation.x
@@ -109,20 +103,11 @@ if __name__ == '__main__':
 			print('Transformed point in the base frame:  x= ', format(base.point.x, '.3f'), '(m), y= ', format(base.point.y, '.3f'), '(m), z= ', format(base.point.z, '.3f'),'(m)')
 			print('-------------------------------------------------')
 			
-			"""print("cam x:", cam.point.x)
-			print("cam y:", cam.point.y)
-			print("cam z:", cam.point.z)
-			print("base x:", base.point.x)
-			print("base y:", base.point.y)
-			print("base z:", base.point.z)"""
-			
-			#qrot = cam.transform.rotation
-			#roll, pitch, yaw, = euler_from_quaternion([qrot.x, qrot.y, qrot.z, qrot.w])
 			
 			# define a plan variable
 			plan = Plan()
-		
-		
+			
+			
 			# above ball
 			twist1 = get_twist(base.point.x, base.point.y, base.point.z + ball.radius + 0.1, 1.57, 0.0, 0.0)
 			# add this point to the plan
@@ -145,17 +130,13 @@ if __name__ == '__main__':
 			
 			plan.points.append(twist3)
 			
-			"""twist5 = get_twist(-0.672, -0.233, 0.124, 1.57, -0.2, 0.75)
-			# add this point to the plan
-			plan.points.append(twist5)"""
 			
-			
-			
-			#math.pi, 0, math.pi/2
-			
-			# publish the plan
-			plan_pub.publish(plan)
-			# wait for 0.1 seconds until the next loop and repeat
+			if go:
+				# publish the plan
+				plan_pub.publish(plan)
+				# wait for 0.1 seconds until the next loop and repeat
+			else:
+				print("waiting for go")
 		loop_rate.sleep()
 
 #use plan points to compare the location of the machine with the intended target
