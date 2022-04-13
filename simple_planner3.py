@@ -78,7 +78,7 @@ if __name__ == '__main__':
 			try:
 				trans = buffer.lookup_transform("base", "camera_color_optical_frame", rospy.Time())
 			except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-				
+				print("frame unavailable")
 				
 				continue
 			x = trans.transform.translation.x
