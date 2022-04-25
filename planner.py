@@ -67,7 +67,7 @@ if __name__ == '__main__':
 	
 	ball_sub = rospy.Subscriber('/sphere_params', SphereParams, get_ball)
 	
-	bool_sub = rospy.Subscriber('/std_msgs/Bool', Bool, execute)
+	bool_sub = rospy.Subscriber('/start_motion', Bool, execute)
 	
 	track_sub = rospy.Subscriber('/pause_tracker', Bool, ball_check)
 	
@@ -112,28 +112,32 @@ if __name__ == '__main__':
 			print('Transformed point in the base frame:  x= ', format(base.point.x, '.3f'), '(m), y= ', format(base.point.y, '.3f'), '(m), z= ', format(base.point.z, '.3f'),'(m)')
 			print('-------------------------------------------------')
 			
-			
+			roll, pitch, yaw = 3.12617, 0.016613, 1.53073
+			rx, ry, rz = -0.01438, -0.4087, 0.274370
 			# define a plan variable
 			plan = Plan()
 			
+			# initial robot pose 
+			twist0 = get_twist(rx, ry, rz , roll, pitch, yaw)
+			plan.points.append(twist0)
 			
 			# above ball
-			twist1 = get_twist(base.point.x, base.point.y, base.point.z + ball.radius + 0.1, 1.57, 0.0, 0.0)
+			twist1 = get_twist(base.point.x, base.point.y, base.point.z + ball.radius + 0.1, roll, pitch, yaw)
 			# add this point to the plan
 			plan.points.append(twist1)
 			
-			twist2 = get_twist(base.point.x, base.point.y, base.point.z + ball.radius, 1.57, 0.0, 0.0)
+			twist2 = get_twist(base.point.x, base.point.y, base.point.z + ball.radius, roll, pitch, yaw)
 			# add this point to the plan
 			plan.points.append(twist2)
 			
 			# go back up
 			plan.points.append(twist1)
 			
-			twist3 = get_twist(base.point.x + .2, base.point.y - .05, base.point.z + ball.radius + 0.1, 1.57, 0.0, 0.0)
+			twist3 = get_twist(base.point.x + .2, base.point.y +.05, base.point.z + ball.radius + 0.1, roll, pitch, yaw)
 			# add this point to the plan
 			plan.points.append(twist3)
 			
-			twist4 = get_twist(base.point.x + .2, base.point.y - .05, base.point.z + ball.radius, 1.57, 0.0, 0.0)
+			twist4 = get_twist(base.point.x + .2, base.point.y + .05, base.point.z + ball.radius, roll, pitch, yaw)
 			# add this point to the plan
 			plan.points.append(twist4)
 			
